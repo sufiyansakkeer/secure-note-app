@@ -107,63 +107,129 @@ class _NoteEditPageState extends State<NoteEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isEditing ? 'Edit Note' : 'New Note'),
+        title: Text(
+          widget.isEditing ? 'Edit Note' : 'New Note',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: colorScheme.onPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.save),
+            icon: const Icon(Icons.save_outlined),
+            tooltip: 'Save note',
             onPressed: _isLoading ? null : _saveNote,
           ),
         ],
       ),
-      body:
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _buildNoteForm(context),
+      ),
+      floatingActionButton:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          labelText: 'Title',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a title';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _contentController,
-                          decoration: const InputDecoration(
-                            labelText: 'Content',
-                            alignLabelWithHint: true,
-                            border: OutlineInputBorder(),
-                          ),
-                          maxLines: null,
-                          expands: true,
-                          textAlignVertical: TextAlignVertical.top,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter some content';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ],
+              ? null
+              : FloatingActionButton(
+                onPressed: _saveNote,
+                tooltip: 'Save note',
+                child: const Icon(Icons.save),
+              ),
+    );
+  }
+
+  Widget _buildNoteForm(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Title field with animation
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.shadow.withAlpha(20),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
+                ],
+              ),
+              child: TextFormField(
+                controller: _titleController,
+                style: theme.textTheme.titleLarge,
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  hintText: 'Enter note title',
+                  prefixIcon: const Icon(Icons.title),
+                ),
+                textCapitalization: TextCapitalization.sentences,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a title';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Content field with animation
+            Expanded(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.shadow.withAlpha(20),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextFormField(
+                  controller: _contentController,
+                  style: theme.textTheme.bodyLarge,
+                  decoration: InputDecoration(
+                    labelText: 'Content',
+                    hintText: 'Write your note here...',
+                    alignLabelWithHint: true,
+                    prefixIcon: const Padding(
+                      padding: EdgeInsets.only(bottom: 250),
+                      child: Icon(Icons.notes),
+                    ),
+                  ),
+                  maxLines: null,
+                  expands: true,
+                  textAlignVertical: TextAlignVertical.top,
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter some content';
+                    }
+                    return null;
+                  },
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
