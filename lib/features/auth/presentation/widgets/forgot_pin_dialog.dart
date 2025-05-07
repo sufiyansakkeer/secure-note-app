@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../presentation/bloc/auth_provider.dart';
+import '../../../notes/presentation/bloc/notes_provider.dart';
 import '../pages/pin_setup_page.dart';
 
 class ForgotPinDialog extends StatefulWidget {
@@ -20,6 +21,27 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
       _isLoading = true;
     });
 
+    // First, clear all notes data
+    final notesProvider = Provider.of<NotesProvider>(context, listen: false);
+    final notesCleared = await notesProvider.clearAllNotes();
+
+    if (!mounted) return;
+
+    if (!notesCleared) {
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to clear notes data. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Then reset the app (clear PIN and first launch flag)
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.resetApplication();
 
@@ -57,7 +79,7 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
           Icon(Icons.warning_amber_rounded, color: colorScheme.error, size: 28),
           const SizedBox(width: 8),
           Text(
-            'Reset App?',
+            'Reset App & Delete Notes?',
             style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
@@ -77,8 +99,10 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Delete all your notes',
-                  style: textTheme.bodyMedium,
+                  'Delete all your notes permanently',
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -106,7 +130,7 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'This action cannot be undone.',
+                    'This action cannot be undone. All your notes will be permanently deleted.',
                     style: textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.error,
