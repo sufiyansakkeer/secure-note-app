@@ -1,14 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'core/util/app_theme.dart';
 import 'features/auth/presentation/bloc/auth_provider.dart';
 import 'features/auth/presentation/pages/pin_login_page.dart';
 import 'features/auth/presentation/pages/pin_setup_page.dart';
-
-import 'injection_container.dart' as di;
+import 'features/notes/data/models/note_model_adapter.dart';
+import 'features/notes/presentation/bloc/notes_provider.dart';
+import 'features/notes/presentation/pages/notes_list_page.dart';
+import 'app/di/injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive
+  await Hive.initFlutter();
+
+  // Register adapters
+  if (!Hive.isAdapterRegistered(0)) {
+    // Using 0 as the typeId for NoteModel
+    Hive.registerAdapter(NoteModelAdapter());
+  }
+
   await di.init();
   runApp(const MyApp());
 }
@@ -19,7 +32,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => di.sl<AuthProvider>())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => di.sl<AuthProvider>()),
+        ChangeNotifierProvider(create: (_) => di.sl<NotesProvider>()),
+      ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return MaterialApp(
@@ -44,12 +60,26 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AuthProvider>(context, listen: false).checkAuthStatus();
-    });
+    // Defer auth check to didChangeDependencies
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      _isInitialized = true;
+      // Use Future.microtask to avoid calling setState during build
+      Future.microtask(() {
+        if (mounted) {
+          Provider.of<AuthProvider>(context, listen: false).checkAuthStatus();
+        }
+      });
+    }
   }
 
   @override
@@ -57,8 +87,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     switch (authProvider.status) {
-      // case AuthStatus.authenticated:
-      //   return const NotesListPage();
+      case AuthStatus.authenticated:
+        return const NotesListPage();
       case AuthStatus.unauthenticated:
         return const PinLoginPage();
       case AuthStatus.firstLaunch:

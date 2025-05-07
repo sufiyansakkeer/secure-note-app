@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../presentation/bloc/auth_provider.dart';
-// import '../../../notes/presentation/pages/notes_list_page.dart';
+import '../../../notes/presentation/pages/notes_list_page.dart';
 
 class PinSetupPage extends StatefulWidget {
   const PinSetupPage({super.key});
@@ -26,6 +26,8 @@ class _PinSetupPageState extends State<PinSetupPage> {
 
   void _setupPin() async {
     if (_formKey.currentState!.validate()) {
+      if (!mounted) return;
+
       setState(() {
         _isLoading = true;
       });
@@ -35,10 +37,12 @@ class _PinSetupPageState extends State<PinSetupPage> {
         _pinController.text,
       );
 
-      if (success && mounted) {
-        // Navigator.of(context).pushReplacement(
-        //   MaterialPageRoute(builder: (_) => const NotesListPage()),
-        // );
+      if (!mounted) return;
+
+      if (success) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const NotesListPage()),
+        );
       } else {
         setState(() {
           _isLoading = false;

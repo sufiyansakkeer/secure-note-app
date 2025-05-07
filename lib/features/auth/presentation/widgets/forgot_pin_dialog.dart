@@ -4,7 +4,7 @@ import '../../presentation/bloc/auth_provider.dart';
 import '../pages/pin_setup_page.dart';
 
 class ForgotPinDialog extends StatefulWidget {
-  const ForgotPinDialog({Key? key}) : super(key: key);
+  const ForgotPinDialog({super.key});
 
   @override
   State<ForgotPinDialog> createState() => _ForgotPinDialogState();
@@ -14,6 +14,8 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
   bool _isLoading = false;
 
   void _resetApp() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
     });
@@ -21,7 +23,9 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.resetApplication();
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const PinSetupPage()),
         (route) => false,
@@ -30,15 +34,13 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
       setState(() {
         _isLoading = false;
       });
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to reset app. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to reset app. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -56,16 +58,14 @@ class _ForgotPinDialogState extends State<ForgotPinDialog> {
         ),
         TextButton(
           onPressed: _isLoading ? null : _resetApp,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text(
-                  'Reset',
-                  style: TextStyle(color: Colors.red),
-                ),
+          child:
+              _isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                  : const Text('Reset', style: TextStyle(color: Colors.red)),
         ),
       ],
     );

@@ -4,15 +4,17 @@ class StorageKeys {
   static const String themeMode = 'theme_mode';
 }
 
-class DatabaseConstants {
-  static const String databaseName = 'secure_note_app.db';
-  static const int databaseVersion = 1;
-  
-  // Notes table
-  static const String notesTable = 'notes';
-  static const String columnId = 'id';
-  static const String columnTitle = 'title';
-  static const String columnContent = 'content';
-  static const String columnCreatedAt = 'created_at';
-  static const String columnUpdatedAt = 'updated_at';
+class HiveConstants {
+  // Box names
+  static const String notesBox = 'notes_box';
+
+  // Type IDs
+  static const int noteTypeId = 0;
+
+  // Field names (for consistency with previous implementation)
+  static const String fieldId = 'id';
+  static const String fieldTitle = 'title';
+  static const String fieldContent = 'content';
+  static const String fieldCreatedAt = 'created_at';
+  static const String fieldUpdatedAt = 'updated_at';
 }
